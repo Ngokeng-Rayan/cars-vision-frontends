@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connexion Direct</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #4DB896;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #3da07d;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Test Connexion Direct - Cars Vision Auto</h1>
+
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="admin@carsvisionauto.cm">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mot de passe:</label>
+            <input type="password" id="password" value="Admin@2026">
+        </div>
+
+        <button onclick="testLogin()">Tester Connexion</button>
+        <button onclick="testUser()">Tester avec User</button>
+        <button onclick="clearResult()">Effacer</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        function clearResult() {
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').className = 'result';
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            showResult('⏳ Connexion en cours...', 'info');
+
+            try {
+                console.log('📤 Envoi requête de connexion...');
+                console.log('Email:', email);
+                console.log('Mot de passe:', password ? 'Fourni' : 'Manquant');
+
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        mot_de_passe: password
+                    })
+                });
+
+                console.log('📥 Réponse reçue:', response);
+                console.log('Status:', response.status);
+                console.log('Status Text:', response.statusText);
+
+                const data = await response.json();
+                console.log('📦 Data:', data);
+
+                if (response.ok) {
+                    showResult(
+                        `✅ CONNEXION RÉUSSIE!\n\n` +
+                        `Status: ${response.status}\n` +
+                        `Token: ${data.token ? 'Présent' : 'Absent'}\n` +
+                        `Refresh Token: ${data.refreshToken ? 'Présent' : 'Absent'}\n\n` +
+                        `Utilisateur:\n` +
+                        `- ID: ${data.utilisateur?.id}\n` +
+                        `- Nom: ${data.utilisateur?.nom} ${data.utilisateur?.prenom}\n` +
+                        `- Email: ${data.utilisateur?.email}\n` +
+                        `- Rôle: ${data.utilisateur?.role}\n` +
+                        `- Statut: ${data.utilisateur?.statut}\n\n` +
+                        `Réponse complète:\n${JSON.stringify(data, null, 2)}`,
+                        'success'
+                    );
+                } else {
+                    showResult(
+                        `❌ ERREUR DE CONNEXION\n\n` +
+                        `Status: ${response.status}\n` +
+                        `Message: ${data.message || 'Erreur inconnue'}\n\n` +
+                        `Réponse complète:\n${JSON.stringify(data, null, 2)}`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                showResult(
+                    `❌ ERREUR RÉSEAU\n\n` +
+                    `Message: ${error.message}\n` +
+                    `Type: ${error.name}\n\n` +
+                    `Vérifiez que le backend est démarré sur http://localhost:5000`,
+                    'error'
+                );
+            }
+        }
+
+        function testUser() {
+            document.getElementById('email').value = 'test@example.com';
+            document.getElementById('password').value = 'password123';
+            showResult('📝 Identifiants changés pour un utilisateur test', 'info');
+        }
+
+        // Test au chargement
+        window.addEventListener('load', () => {
+            showResult(
+                '📋 Instructions:\n\n' +
+                '1. Assurez-vous que le backend est démarré (npm run dev dans Car_Vision)\n' +
+                '2. Cliquez sur "Tester Connexion" pour tester avec l\'admin\n' +
+                '3. Ou cliquez sur "Tester avec User" puis "Tester Connexion"\n' +
+                '4. Vérifiez la console du navigateur (F12) pour plus de détails',
+                'info'
+            );
+        });
+    </script>
+</body>
+
+</html>

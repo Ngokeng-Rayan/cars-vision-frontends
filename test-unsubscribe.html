@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Désabonnement Newsletter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #c82333;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Test Désabonnement Newsletter</h1>
+
+    <div class="info">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Assurez-vous que le backend tourne sur http://localhost:5000</li>
+            <li>Entrez un email pour tester</li>
+            <li>Ouvrez la console du navigateur (F12) pour voir les logs détaillés</li>
+        </ol>
+    </div>
+
+    <form id="testForm">
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required placeholder="test@example.com">
+        </div>
+        <button type="submit" id="submitBtn">Tester le désabonnement</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const form = document.getElementById('testForm');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = emailInput.value;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Traitement...';
+            resultDiv.innerHTML = '';
+
+            console.log('🔍 Test - Email:', email);
+            console.log('🔍 Test - API URL:', API_URL);
+
+            try {
+                // D'abord, s'abonner
+                console.log('📝 Étape 1: Abonnement...');
+                const subscribeResponse = await fetch(`${API_URL}/newsletter/subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const subscribeData = await subscribeResponse.json();
+                console.log('✅ Abonnement:', subscribeData);
+
+                // Ensuite, se désabonner
+                console.log('📝 Étape 2: Désabonnement...');
+                const unsubscribeResponse = await fetch(`${API_URL}/newsletter/unsubscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const unsubscribeData = await unsubscribeResponse.json();
+                console.log('✅ Désabonnement:', unsubscribeData);
+
+                if (unsubscribeResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>✅ Succès!</strong><br>
+                            ${unsubscribeData.message}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <strong>❌ Erreur!</strong><br>
+                            ${unsubscribeData.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Erreur réseau!</strong><br>
+                        ${error.message}<br><br>
+                        <small>Vérifiez que le backend est bien démarré sur http://localhost:5000</small>
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Tester le désabonnement';
+            }
+        });
+    </script>
+</body>
+
+</html>
